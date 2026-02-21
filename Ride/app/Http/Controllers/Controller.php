@@ -7,5 +7,5 @@ use Illuminate\Http\JsonResponse;
 
 abstract class Controller
 {
-   
+    
 }

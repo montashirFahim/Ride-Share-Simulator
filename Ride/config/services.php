@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'external_api' => [
+        'url' => env('EXTERNAL_API_URL', 'http://localhost:8080'),
+        'username' => env('EXTERNAL_API_USERNAME'),
+        'password' => env('EXTERNAL_API_PASSWORD'),
+    ],
+
 ];

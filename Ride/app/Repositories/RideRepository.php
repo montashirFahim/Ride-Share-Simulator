@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Service;
+namespace App\Repositories;
 
+use Hamcrest\Core\DescribedAs;
 use Illuminate\Support\Facades\DB;
 
 class RideRepository
@@ -24,7 +25,7 @@ class RideRepository
 
     public function EndRide(int $rideId)
     {
-        $result = DB::select(
+        $rows = DB::update(
             "UPDATE rides
              SET status = 'ended',
                  ended_at = NOW(),
@@ -34,13 +35,21 @@ class RideRepository
              RETURNING id",
             [$rideId]
         );
+        if (!$rows)
+            return null;
 
-        return $result[0]->id ?? null;
+        $response = DB::selectOne(
+            "SELECT id, rider_id, driver_id, status
+             FROM rides
+             WHERE id = ?",
+            [$rideId]
+        );
+        return $response;
     }
 
     public function FindUserActiveRide(int $userId)
     {
-        return DB::select(
+        return DB::selectOne(
             "SELECT id
              FROM rides
              WHERE (rider_id = ? OR driver_id = ?)
@@ -60,12 +69,36 @@ class RideRepository
         );
     }
 
+    public function EndRideCheck(int $id)
+    {
+        return DB::selectOne(
+            "SELECT *
+             FROM rides
+             WHERE id = ?
+             AND status = 'ended'
+             LIMIT 1",
+            [$id]
+        );
+    }
+
     public function GetBusyDrivers()
     {
         return DB::select(
             "SELECT DISTINCT driver_id
              FROM rides
              WHERE status = 'started'"
+        );
+    }
+
+    public function GetRideInfo($userId)
+    {
+        return DB::selectOne(
+            "SELECT * 
+            FROM rides
+            WHERE rider_id = ? OR driver_id = ?
+            ORDER BY started_at DESC
+            LIMIT 1",
+            [$userId, $userId]
         );
     }
 }
