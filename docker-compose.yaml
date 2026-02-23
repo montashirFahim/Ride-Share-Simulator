@@ -1,0 +1,111 @@
+# version: '3.8'
+
+# services:
+#   # User Service (Go)
+#   user-app:
+#     build:
+#       context: ./User
+#       dockerfile: Dockerfile
+#     container_name: user-app
+#     restart: unless-stopped
+#     env_file:
+#       - ./User/.env
+#     ports:
+#       - "8080:8080"
+#     networks:
+#       - ride-sim-network
+
+#   # Ride Service (Laravel/PHP)
+#   ride-app:
+#     build:
+#       context: ./Ride
+#       dockerfile: Dockerfile
+#     container_name: ride-app
+#     restart: unless-stopped
+#     env_file:
+#       - ./Ride/.env
+#     ports:
+#       - "8000:8000"   
+#     networks:
+#       - ride-sim-network
+
+# networks:
+#   ride-sim-network:
+#     external: true
+
+version: '3.8'
+
+services:
+
+  pg-container-v2:
+    image: postgres:latest
+    container_name: pg-container-v2
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password # Standardized password
+      POSTGRES_DB: postgres
+    ports:
+      - "5433:5432" # host port changed to avoid conflict
+    volumes:
+      - postgres_data_v2:/var/lib/postgresql
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql # <-- added
+    networks:
+      - ride-sim-network-v2
+
+  # Redis
+  redis-stack-v2:
+    image: redis/redis-stack:latest
+    container_name: redis-stack-v2
+    restart: unless-stopped
+    ports:
+      - "6380:6379" # host port changed to avoid conflict
+      - "8002:8001" # Redis UI port changed to avoid conflict
+    volumes:
+      - redis_data_v2:/data
+    networks:
+      - ride-sim-network-v2
+  # User Service (Go)
+  user-app-v2:
+    build:
+      context: ./User
+      dockerfile: Dockerfile
+    container_name: user-app-v2
+    restart: unless-stopped
+    env_file:
+      - ./User/.env
+    ports:
+      - "8085:8080" # host port changed to avoid conflict
+    depends_on:
+      - pg-container-v2
+      - redis-stack-v2
+    networks:
+      - ride-sim-network-v2
+
+  # Ride Service (Laravel/PHP)
+  ride-app-v2:
+    build:
+      context: ./Ride
+      dockerfile: Dockerfile
+    container_name: ride-app-v2
+    restart: unless-stopped
+    env_file:
+      - ./Ride/.env
+    ports:
+      - "8005:8000" # host port changed to avoid conflict
+    depends_on:
+      - user-app-v2
+      - pg-container-v2
+      - redis-stack-v2
+    networks:
+      - ride-sim-network-v2
+
+volumes:
+  postgres_data_v2:
+    driver: local
+  redis_data_v2:
+    driver: local
+
+networks:
+  ride-sim-network-v2:
+    driver: bridge
