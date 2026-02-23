@@ -3,6 +3,11 @@
 A distributed ride-sharing simulator built with microservices architecture, featuring a **User Service (Go)** and **Ride Service (Laravel/PHP)**, backed by PostgreSQL and Redis.
 
 ---
+## API Documentation
+
+https://docs.google.com/document/d/18509p3yzW9mcHLRz36KLpBOvBoqTIZnkPa8XGa98mck/edit?usp=sharing
+
+---
 
 ## Project Architecture
 
